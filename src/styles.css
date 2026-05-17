@@ -49,3 +49,204 @@ body,
   opacity: 0.6;
   font-variant-numeric: tabular-nums;
 }
+
+/* mesh-step-relay */
+.relay-screen {
+  padding: 4.5rem 1rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 30rem;
+  margin: 0 auto;
+}
+.relay-header h1 {
+  font-size: 1.4rem;
+  margin: 0;
+  color: var(--mesh-accent);
+}
+.relay-status {
+  font-size: 0.8rem;
+  opacity: 0.6;
+  margin: 0.25rem 0 0;
+  font-variant-numeric: tabular-nums;
+}
+.relay-name input,
+.relay-screen input {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid #444;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--mesh-fg);
+  font-size: 1rem;
+}
+.relay-sensor {
+  font-size: 0.75rem;
+  opacity: 0.55;
+  margin: 0;
+  text-align: center;
+}
+.relay-banner {
+  border-radius: 0.75rem;
+  padding: 1rem 1rem 0.75rem;
+  background: rgba(76, 217, 100, 0.08);
+  border: 1px solid rgba(76, 217, 100, 0.25);
+  transition: opacity 200ms ease;
+  opacity: 0.85;
+}
+.relay-banner.is-mine {
+  opacity: 1;
+  border-color: var(--mesh-accent);
+}
+.relay-banner.is-flash {
+  opacity: 1;
+}
+.relay-banner-title {
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  opacity: 0.6;
+}
+.relay-banner-name {
+  font-size: 1.6rem;
+  font-weight: 600;
+  margin: 0.25rem 0 0.6rem;
+  color: var(--mesh-accent);
+}
+.relay-countdown {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.relay-countdown-bar {
+  flex: 1;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+  transition: opacity 250ms ease;
+}
+.relay-countdown-fill {
+  height: 100%;
+  background: var(--mesh-accent);
+}
+.relay-countdown-label {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.85rem;
+  min-width: 3ch;
+  text-align: right;
+}
+.relay-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.relay-step-bar {
+  height: 0.75rem;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.relay-step-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4cd964, #5ac8fa);
+}
+.relay-step-label {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.85rem;
+  text-align: right;
+  opacity: 0.75;
+}
+.relay-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+.relay-btn {
+  padding: 0.85rem 0.75rem;
+  border-radius: 0.55rem;
+  border: 1px solid #444;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--mesh-fg);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: opacity 150ms ease;
+}
+.relay-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.relay-btn.relay-claim {
+  border-color: var(--mesh-accent);
+  color: var(--mesh-accent);
+}
+.relay-btn.relay-pass {
+  background: var(--mesh-accent);
+  color: #000;
+  border-color: var(--mesh-accent);
+}
+.relay-btn.relay-add-step {
+  grid-column: 1 / -1;
+  background: rgba(90, 200, 250, 0.12);
+  border-color: rgba(90, 200, 250, 0.35);
+}
+.relay-history {
+  list-style: none;
+  padding: 0.5rem 0.75rem;
+  margin: 0;
+  border-radius: 0.55rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 0.85rem;
+  max-height: 9rem;
+  overflow-y: auto;
+}
+.relay-history-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.25rem 0;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+}
+.relay-history-row:last-child {
+  border-bottom: none;
+}
+.relay-history-who {
+  font-weight: 500;
+}
+.relay-history-what {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.55;
+  font-size: 0.7rem;
+}
+.relay-history-claim .relay-history-what {
+  color: var(--mesh-accent);
+  opacity: 0.9;
+}
+.relay-history-drop .relay-history-what {
+  color: #ff6b6b;
+  opacity: 0.9;
+}
+.relay-mybar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.relay-peers {
+  list-style: none;
+  padding: 0.4rem 0.6rem;
+  margin: 0;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 0.85rem;
+}
+.relay-peers .relay-steps {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.2rem 0;
+}
+.relay-peers-count {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.8;
+}
