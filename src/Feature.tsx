@@ -9,6 +9,7 @@ import {
   useFlashOnChange,
   useNamedPeer,
   usePerPeerValue,
+  useRoster,
   useStepCount,
   type MeshConfig,
   type YRoom,
@@ -21,6 +22,22 @@ type RelayEvent = { id: string; peerId: string; type: "claim" | "pass" | "drop";
 const TTL_MS = 60_000;
 const DEFAULT_TARGET = 25;
 const newId = () => Math.random().toString(36).slice(2, 12);
+
+/**
+ * The next peer after `from` in a sorted, cyclic roster. With `from` absent
+ * (or the only peer gone), falls back to the first present peer. Returns null
+ * if nobody is present. Deterministic across peers because `present` is sorted
+ * identically everywhere, so every peer agrees on who is "next" — that's what
+ * lets each peer *self*-claim its own turn without a central writer (the
+ * useExpiringClaim API only lets a peer claim for itself, never for another).
+ */
+function nextPeer(present: string[], from: string | null): string | null {
+  if (present.length === 0) return null;
+  if (!from) return present[0]!;
+  const i = present.indexOf(from);
+  if (i === -1) return present[0]!;
+  return present[(i + 1) % present.length]!;
+}
 
 export function Feature({ room, config }: Props) {
   if (!room)
@@ -38,7 +55,9 @@ function Body({ room, config }: { room: YRoom; config: MeshConfig }) {
   const baton = useExpiringClaim(room, "baton", TTL_MS);
   const steps = usePerPeerValue<StepRec>(room, "steps", { count: 0, ts: 0 });
   const log = useEventLog<RelayEvent>(room, "relay");
-  const target = room.doc.getMap<number>("state").get("target") ?? DEFAULT_TARGET;
+  const roster = useRoster(room);
+  const state = room.doc.getMap<string | number>("state");
+  const target = (state.get("target") as number | undefined) ?? DEFAULT_TARGET;
   const { burst } = useConfetti();
   const flashHolder = useFlashOnChange(baton.claimedBy);
   const deadline = useDeadline(baton.claimedBy ? Date.now() + baton.msRemaining : null, {
@@ -48,13 +67,46 @@ function Body({ room, config }: { room: YRoom; config: MeshConfig }) {
   const reachedTarget = myCount >= target;
   const reachedRef = useRef(false);
 
+  // The peer the baton last belonged to (the relay anchor). Set on every
+  // claim so the cyclic "who's next" is agreed mesh-wide even after a silent
+  // 60s timeout where the holder never ran release().
+  const lastHolder = (state.get("lastHolder") as string | undefined) ?? null;
+  const nextUp = nextPeer(roster.present, lastHolder);
+  const iAmNext = nextUp === room.peerId;
+
+  // Auto-pass: the holder reaching N hands the baton on rather than waiting for
+  // a manual PASS click. Record self as lastHolder, then free the slot; the
+  // peer that computes itself "next" self-claims (effect below). One-shot per
+  // hold via reachedRef.
   useEffect(() => {
     if (reachedTarget && baton.isMine && !reachedRef.current) {
       reachedRef.current = true;
       burst({ origin: "center", count: 80, hueRange: [100, 160] });
+      state.set("lastHolder", room.peerId);
+      log.push({ id: newId(), peerId: room.peerId, type: "pass", ts: Date.now() });
+      baton.release();
+      steps.setMy({ count: 0, ts: Date.now() });
     }
     if (!baton.isMine) reachedRef.current = false;
   }, [reachedTarget, baton.isMine, burst]);
+
+  // Auto-claim: once the relay has started (a first holder set `lastHolder`),
+  // a free baton — released after reach-N or expired by the 60s deadline —
+  // is grabbed by the deterministically-next peer. Because `present` is sorted
+  // identically on every peer, exactly one peer satisfies iAmNext, so there's
+  // no claim stampede. With ≥1 present peer the baton never stays orphaned —
+  // that's the advertised "drops to the next peer". Before the first manual
+  // claim (`lastHolder` null) the baton stays free so the UX still reads
+  // "claim it" on a cold room.
+  useEffect(() => {
+    if (lastHolder == null) return; // relay not started yet — wait for first claim
+    if (!baton.isFree || !iAmNext || roster.present.length === 0) return;
+    if (lastHolder === room.peerId && roster.present.length > 1) return; // don't re-grab my own
+    steps.setMy({ count: 0, ts: Date.now() });
+    state.set("lastHolder", room.peerId);
+    baton.claim();
+    log.push({ id: newId(), peerId: room.peerId, type: "claim", ts: Date.now() });
+  }, [baton.isFree, iAmNext, roster.present.length, lastHolder]);
 
   useEffect(() => {
     if (flashHolder && baton.claimedBy) burst({ origin: "top", count: 40, hueRange: [40, 80] });
@@ -64,12 +116,14 @@ function Body({ room, config }: { room: YRoom; config: MeshConfig }) {
   const onClaim = () => {
     if (!baton.isFree) return;
     steps.setMy({ count: 0, ts: Date.now() });
+    state.set("lastHolder", room.peerId);
     baton.claim();
     log.push({ id: newId(), peerId: room.peerId, type: "claim", ts: Date.now() });
   };
   const onPass = () => {
     if (!baton.isMine || !reachedTarget) return;
     log.push({ id: newId(), peerId: room.peerId, type: "pass", ts: Date.now() });
+    state.set("lastHolder", room.peerId);
     baton.release();
     steps.setMy({ count: 0, ts: Date.now() });
   };

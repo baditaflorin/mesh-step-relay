@@ -1,7 +1,7 @@
 # mesh-step-relay
 
 [![pages](https://img.shields.io/badge/live-baditaflorin.github.io%2Fmesh-step-relay-4cd964)](https://baditaflorin.github.io/mesh-step-relay/)
-[![version](https://img.shields.io/badge/version-0.1.0-blue)](https://github.com/baditaflorin/mesh-step-relay/blob/main/package.json)
+[![version](https://img.shields.io/badge/version-0.1.1-blue)](https://github.com/baditaflorin/mesh-step-relay/blob/main/package.json)
 [![license](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 
 > Virtual baton; current holder takes N steps in 60s or it drops to the next peer.
